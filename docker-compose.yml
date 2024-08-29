@@ -1,0 +1,18 @@
+services:
+  frontend:
+    build: frontend-app
+    depends_on:
+      - webserver
+    ports:
+      - 8080:8080
+
+  mock-xero:
+    image: jaypeng2015/show-me-the-money
+    stop_grace_period: 1s
+
+  webserver:
+    build: .
+    depends_on:
+      - mock-xero
+    ports:
+      - 4000:4000 # Required only for Vite dev server
