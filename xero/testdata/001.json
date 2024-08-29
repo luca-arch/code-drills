@@ -1,0 +1,65 @@
+{
+  "Status": "OK",
+  "Reports": [
+    {
+      "ReportID": "1234",
+      "ReportName": "Test Sheet",
+      "ReportType": "BalanceSheet",
+      "ReportTitles": [
+        "Title 01",
+        "Title 02"
+      ],
+      "ReportDate": "25 August 2024",
+      "UpdatedDateUTC": "/Date(1724595191626)/",
+      "Rows": [
+        {
+          "RowType": "Header",
+          "Cells": [
+            {
+              "Value": ""
+            },
+            {
+              "Value": "25 August 2024"
+            },
+            {
+              "Value": "26 August 2023"
+            }
+          ]
+        },
+        {
+          "RowType": "Section",
+          "Title": "Assets"
+        },
+        {
+          "RowType": "Section",
+          "Title": "Bank",
+          "Rows": [
+            {
+              "RowType": "Row",
+              "Cells": [
+                {
+                  "Value": "My Bank Account",
+                  "Attributes": [
+                    {
+                      "Value": "some value",
+                      "Id": "account-id"
+                    }
+                  ]
+                },
+                {
+                  "Value": "126.70",
+                  "Attributes": [
+                    {
+                      "Value": "other value",
+                      "Id": "account-id"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
