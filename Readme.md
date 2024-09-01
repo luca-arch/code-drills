@@ -39,7 +39,7 @@ make tests-go
 
 ## TODOs
 
-- [ ] Move test runners inside docker container
+- [x] Move test runners inside docker container
 - [ ] Refactor `web.server.ListBalanceSheet()` to add automatic retries when the error is either `xero.ErrTooManyRequests` or `xero.ErrXeroDown`. See [backoff retries](https://encore.dev/blog/retries).
 - [ ] Update backend's Dockerfile with [dockerize](https://github.com/jwilder/dockerize) and wait for `mock-xero:3000` before starting the webserver.
 - [x] Run `make lint-go` and fix all warnings and errors where possible

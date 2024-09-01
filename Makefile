@@ -27,8 +27,8 @@ tests-assets: ### Run unit test (frontend app)
 
 
 tests-go: ### Run unit test (backend app)
-	docker run --rm -ti \
+	docker run --rm -t \
 		-w /mnt \
 		-v $(PWD):/mnt golang:1.23.0-alpine3.20 \
-		go test ./...
+		go test -coverprofile=coverage.out ./...
 .PHONY: tests-go

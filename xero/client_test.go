@@ -1,6 +1,7 @@
 package xero_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/luca-arch/code-drills/xero"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +24,9 @@ func (m mockHTTPDoer) Do(_ *http.Request) (*http.Response, error) {
 	return m.mockResponse, m.mockError
 }
 
-func mockReadCloser() io.ReadCloser {
+func mockReadCloser(t *testing.T) io.ReadCloser {
+	t.Helper()
+
 	fake := strings.NewReader("")
 
 	return io.NopCloser(fake)
@@ -91,7 +95,7 @@ func TestBalanceSheetError(t *testing.T) {
 				WithHTTPClient(&mockHTTPDoer{
 					mockError: test.mockError,
 					mockResponse: &http.Response{
-						Body:       mockReadCloser(),
+						Body:       mockReadCloser(t),
 						StatusCode: test.mockStatus,
 					},
 				})
@@ -104,38 +108,162 @@ func TestBalanceSheetError(t *testing.T) {
 	}
 }
 
-// TODO: extend this test.
 func TestBalanceSheetResponse(t *testing.T) {
 	t.Parallel()
 
-	mock, err := os.ReadFile("testdata/001.json")
-	assert.NoError(t, err)
+	type fields struct {
+		body   []byte
+		status int
+	}
 
-	body := string(mock)
+	type wants struct {
+		err    error
+		report xero.Report
+	}
 
-	client := xero.HTTPClient(nil).
-		WithHTTPClient(&mockHTTPDoer{
-			mockError: nil,
-			mockResponse: &http.Response{
-				Body:       io.NopCloser(strings.NewReader(body)),
-				StatusCode: http.StatusOK,
+	tests := map[string]struct {
+		fields
+		wants
+	}{
+		"success": {
+			fields{
+				body:   fixture(t, "testdata/reports.json"),
+				status: http.StatusOK,
 			},
+			wants{
+				report: xero.Report{
+					ReportID:   "1234",
+					ReportName: "Test Sheet",
+					ReportType: "BalanceSheet",
+					ReportTitles: []string{
+						"Title 01",
+						"Title 02",
+					},
+					ReportDate:     "25 August 2024",
+					UpdatedDateUTC: xeroDTField(t, 1724595191),
+					Rows: []xero.Row{
+						{
+							RowType: "Header",
+							Cells: []xero.Cell{
+								{
+									Value: "",
+								},
+								{
+									Value: "25 August 2024",
+								},
+								{
+									Value: "26 August 2023",
+								},
+							},
+						},
+						{
+							RowType: "Section",
+							Title:   "Assets",
+						},
+						{
+							RowType: "Section",
+							Title:   "Bank",
+							Rows: []xero.Row{
+								{
+									RowType: "Row",
+									Cells: []xero.Cell{
+										{
+											Value: "My Bank Account",
+											Attributes: []xero.Attributes{
+												{
+													ID:    "account-id",
+													Value: "some value",
+												},
+											},
+										},
+										{
+											Value: "126.70",
+											Attributes: []xero.Attributes{
+												{
+													ID:    "account-id",
+													Value: "other value",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		"error - response.Body.Status not OK": {
+			fields{
+				body:   fixture(t, "testdata/error.json"),
+				status: http.StatusOK,
+			},
+			wants{
+				err: xero.ErrBrokenResponse,
+			},
+		},
+		"error - response.Body.Reports invalid": {
+			fields{
+				body:   fixture(t, "testdata/invalid.json"),
+				status: http.StatusOK,
+			},
+			wants{
+				err: xero.ErrInvalidJSON,
+			},
+		},
+		"error - invalid content type": {
+			fields{
+				body:   []byte("hello"),
+				status: http.StatusOK,
+			},
+			wants{
+				err: xero.ErrInvalidResponse,
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			client := xero.HTTPClient(nil).
+				WithHTTPClient(&mockHTTPDoer{
+					mockError: nil,
+					mockResponse: &http.Response{
+						Body:       io.NopCloser(bytes.NewReader(test.fields.body)),
+						StatusCode: test.status,
+					},
+				})
+
+			resp, err := client.BalanceSheet(context.TODO())
+
+			if test.wants.err == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, resp.Reports[0], test.wants.report)
+
+				return
+			}
+
+			assert.ErrorIs(t, err, test.wants.err)
 		})
+	}
+}
 
-	resp, err := client.BalanceSheet(context.TODO())
+func fixture(t *testing.T, path string) []byte {
+	t.Helper()
 
-	assert.NoError(t, err)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	assert.Len(t, resp.Reports, 1)
+	return data
+}
 
-	report := resp.Reports[0]
+func xeroDTField(t *testing.T, unixSeconds int) xero.DateTimeField {
+	t.Helper()
 
-	assert.Equal(t, "1234", report.ReportID)
-	assert.Equal(t, "Test Sheet", report.ReportName)
-	assert.Equal(t, "BalanceSheet", report.ReportType)
-	assert.Equal(t, []string{"Title 01", "Title 02"}, report.ReportTitles)
-	assert.Equal(t, "25 August 2024", report.ReportDate)
-	assert.Equal(t, int64(1724595191), report.UpdatedDateUTC.Unix())
-
-	assert.Len(t, report.Rows, 3)
+	return xero.DateTimeField{ 
+		time.Unix(int64(unixSeconds), 0),
+	}
 }
