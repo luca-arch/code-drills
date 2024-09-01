@@ -48,3 +48,4 @@ make tests-go
 - [x] Add tests for the front-end!!!
 - [ ] Refactor TS types to use camelCase starting with lowercase letters (maybe?).
 - [x] Rebase commit history, possibly use [gitmoji](https://gitmoji.dev/)
+- [ ] Update [service.go:listBalanceSheetHandler](web/service.go) to read request's query parameters and pass them to the Xero client
