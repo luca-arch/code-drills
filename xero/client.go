@@ -33,7 +33,7 @@ type client struct {
 }
 
 // HTTPClient returns a new Xero HTTP client with default configuration.
-func HTTPClient(logger *slog.Logger) *client {
+func HTTPClient(logger *slog.Logger) *client { //nolint:revive // Ok to return this unexported struct
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
@@ -83,7 +83,7 @@ func (c *client) BalanceSheet(ctx context.Context) (*ReportResponse, error) {
 	case resp.StatusCode >= http.StatusInternalServerError:
 		return nil, ErrXeroDown
 	default:
-		return nil, errors.New("invalid status in Xero response: " + strconv.Itoa(resp.StatusCode))
+		return nil, errors.New("invalid status in Xero response: " + strconv.Itoa(resp.StatusCode)) //nolint:err113 // This is just to expose the status code
 	}
 
 	body, err := io.ReadAll(resp.Body)

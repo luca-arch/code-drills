@@ -1,4 +1,18 @@
 linters-settings:
+  cyclop:
+    max-complexity: 15
+  depguard:
+    rules:
+      prevent_unmaintained_packages:
+        list-mode: lax
+        files:
+          - $all
+          - "!$test"
+        allow:
+          - $gostd
+        deny:
+          - pkg: io/ioutil
+            desc: "replaced by io and os packages since Go 1.16: https://tip.golang.org/doc/go1.16#ioutil"
   govet:
     shadow: true
     settings:
@@ -21,16 +35,8 @@ linters-settings:
   goconst:
     min-len: 2
     min-occurrences: 5
-  issues:
-    exclude-rules:
-      - path: _test\.go
-        linters:
-          - exhaustruct
-          - funlen
-          - gosec
-          - wrapcheck
   lll:
-    line-length: 160
+    line-length: 200
     tab-width: 1
   misspell:
     locale: UK
@@ -41,19 +47,22 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - copyloopvar
     - containedctx
     - contextcheck
+    - cyclop
     - decorder
+    - depguard
     - dogsled
     - dupl
     - durationcheck
+    - err113
     - errcheck
     - errchkjson
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
+    - exhaustruct
     - forbidigo
     - forcetypeassert
     - funlen
@@ -85,6 +94,7 @@ linters:
     - maintidx
     - makezero
     - misspell
+    - mnd
     - nakedret
     - nestif
     - nilerr
@@ -98,10 +108,12 @@ linters:
     - prealloc
     - predeclared
     - promlinter
+    - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
     - stylecheck
+    - tagliatelle
     - tenv
     - testpackage
     - thelper
@@ -113,7 +125,23 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
+    - wrapcheck
     - wsl
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - err113
+        - exhaustruct
+        - forcetypeassert
+        - funlen
+        - gosec
+        - wrapcheck
+    - path: xero/balance\.go
+      linters:
+        - tagliatelle
 
 run:
   allow-parallel-runners: true

@@ -15,10 +15,9 @@ lint-assets: ### Run eslint and prettier
 lint-go: ### Run go fmt and golangci-lint
 	go fmt ./...;
 	echo -e '\033[1mgo fmt finished!\033[0m';
-	docker run --rm -v $(PWD):/mnt -w /mnt golangci/golangci-lint:$(GCI_LINT) golangci-lint run --fix -v
+	docker run --rm -t -v $(PWD):/mnt -w /mnt golangci/golangci-lint:$(GCI_LINT) \
+		golangci-lint run --fix -v;
 	echo -e '\033[1mgolangci-lint passed!\033[0m';
-	docker run --rm -v $(PWD):/data cytopia/goimports:latest -w .
-	echo -e '\033[1mgoimports passed!\033[0m';
 .PHONY: lint-go
 
 

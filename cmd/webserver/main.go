@@ -14,7 +14,9 @@ func debugLogger() *slog.Logger {
 	lvl.Set(slog.LevelDebug)
 
 	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: lvl,
+		AddSource:   true,
+		Level:       lvl,
+		ReplaceAttr: nil,
 	})
 
 	return slog.New(handler)

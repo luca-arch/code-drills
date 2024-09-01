@@ -24,7 +24,7 @@ type server struct {
 }
 
 // HTTPServer returns a new HTTP server with default configuration.
-func HTTPServer(logger *slog.Logger, apiClient xeroclient) *server {
+func HTTPServer(logger *slog.Logger, apiClient xeroclient) *server { //nolint:revive // Ok to return this unexported struct
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
