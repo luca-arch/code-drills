@@ -1,6 +1,4 @@
-/*
-Package web provides a server mux for serving HTTP requests.
-*/
+// Package web provides a server mux for serving HTTP requests.
 package web
 
 import (
@@ -39,7 +37,8 @@ func HTTPServer(logger *slog.Logger, apiClient xeroclient) *server {
 	}
 }
 
-// Mux returns a new server mux.
+// Mux returns a new server mux with the following routes:
+// - GET /balance.
 func (s *server) Mux() http.Handler {
 	mux := &http.ServeMux{}
 

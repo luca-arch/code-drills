@@ -30,10 +30,10 @@ This repo only contains a minimal set of unit tests, most of which are rather tr
 Please note, in order to run tests, all go and npm packages must be installed, because tests are executed on the host machine rather than Docker containers.
 
 ```sh
-# Run TSX tests
+# Run TSX tests (host machine)
 make tests-assets
 
-# Run go tests
+# Run go tests (in container)
 make tests-go
 ```
 

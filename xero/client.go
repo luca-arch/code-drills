@@ -10,7 +10,15 @@ import (
 	"strconv"
 )
 
-const DefaultBaseURL = "https://api.xero.com"
+const DefaultBaseURL = "https://api.xero.com" // Default Xero API domain.
+
+var (
+	ErrBrokenResponse  = errors.New("xero response with error")                       // Xero response status (in the body) not OK .
+	ErrHTTPFailure     = errors.New("internal error")                                 // HTTP transport error.
+	ErrInvalidJSON     = errors.New("error while unmarshalling Xero reports")         // Xero API returned malformed JSON.
+	ErrInvalidResponse = errors.New("error while unmarshalling Xero response")        // Xero API returned non-JSON response.
+	ErrRequestFailure  = errors.New("error while retrieving Balance Sheet from Xero") // HTTP request error.
+)
 
 // HTTPDoer defines an interface to make HTTP requests.
 type HTTPDoer interface {
@@ -51,14 +59,14 @@ func (c *client) BalanceSheet(ctx context.Context) (*ReportResponse, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+"/api.xro/2.0/Reports/BalanceSheet", nil)
 	if err != nil {
-		return nil, errors.Join(errors.New("internal error"), err)
+		return nil, errors.Join(ErrHTTPFailure, err)
 	}
 
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return nil, errors.Join(errors.New("error while retrieving Balance Sheet from Xero"), err)
+		return nil, errors.Join(ErrRequestFailure, err)
 	}
 
 	c.logger.Debug("HTTP request finished", "status", resp.StatusCode)
@@ -85,13 +93,13 @@ func (c *client) BalanceSheet(ctx context.Context) (*ReportResponse, error) {
 
 	switch {
 	case err != nil:
-		return nil, errors.Join(errors.New("error while unmarshalling Xero response"), err)
+		return nil, errors.Join(ErrInvalidResponse, err)
 	case !r.OK():
-		return nil, errors.New("xero response with error")
+		return nil, ErrBrokenResponse
 	}
 
 	if err = json.Unmarshal(body, &rr); err != nil {
-		return nil, errors.Join(errors.New("error while unmarshalling Xero reports"), err)
+		return nil, errors.Join(ErrInvalidJSON, err)
 	}
 
 	return &rr, nil

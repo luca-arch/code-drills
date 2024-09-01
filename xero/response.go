@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	// Error returned for 400 status code.
-	ErrInvalidRequest = errors.New("invalid parameter")
+	ErrInvalidRequest = errors.New("invalid parameter") // Error returned for 400 status code.
 
-	// See https://developer.xero.com/documentation/guides/oauth2/limits/#api-rate-limits
-	ErrTooManyRequests = errors.New("request hit the rate limit")
+	ErrInvalidTimestamp = errors.New("could not unmarshal .NET timestamp") // Error returned for non-integer UNIX timestamps.
 
-	// Error returned for any 5xx status code.
-	ErrXeroDown = errors.New("xero API is not reachable")
+	ErrTooManyRequests = errors.New("request hit the rate limit") // See https://developer.xero.com/documentation/guides/oauth2/limits/#api-rate-limits
 
-	// XeroDateFormat matches .NET JSON date format in a string.
-	XeroDateFormat = regexp.MustCompile(`Date\((?P<Value>\d+)\)`)
+	ErrXeroDown = errors.New("xero API is not reachable") // Error returned for any 5xx status code.
+
+	ErrZeroTimestamp = errors.New("invalid zero timestamp") // Error returned for zero and negative UNIX timestamps.
+
+	XeroDateFormat = regexp.MustCompile(`Date\((?P<Value>\d+)\)`) // XeroDateFormat matches .NET JSON date format in a string.
 )
 
 // Response contains fields common to all Xero API's responses.
@@ -45,7 +45,7 @@ func (dt *DateTimeField) UnmarshalJSON(data []byte) error {
 	}
 
 	matches := XeroDateFormat.FindStringSubmatch(xeroDate)
-	if len(matches) != 2 {
+	if len(matches) != 2 { //nolint:mnd // Expects exactly two matches.
 		return nil
 	}
 
@@ -53,11 +53,11 @@ func (dt *DateTimeField) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case err != nil:
-		return errors.Join(errors.New("could not unmarshal .NET timestamp"), err)
+		return errors.Join(ErrInvalidTimestamp, err)
 	case unixTS <= 0:
-		return errors.New("invalid zero timestamp")
+		return ErrZeroTimestamp
 	default:
-		*dt = DateTimeField{time.Unix(unixTS/1000, 0)}
+		*dt = DateTimeField{time.Unix(unixTS/1000, 0)} //nolint:mnd  // 1000 is one millisecond
 
 		return nil
 	}
